@@ -1,3 +1,244 @@
 'use strict';
 
-// write code here
+let lastColumnIndex = null;
+let sortDirection = 'asc';
+
+// table sorting
+document.querySelectorAll('thead tr th').forEach((th, index) => {
+  th.addEventListener('click', () => {
+    const tbody = document.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    if (lastColumnIndex !== index) {
+      sortDirection = 'asc';
+      lastColumnIndex = index;
+    } else {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    }
+
+    rows.sort((a, b) => {
+      const valA = a.cells[index].textContent.trim();
+      const valB = b.cells[index].textContent.trim();
+
+      const numA = parseFloat(valA.replace(/[^0-9.-]/g, ''));
+      const numB = parseFloat(valB.replace(/[^0-9.-]/g, ''));
+
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return sortDirection === 'asc' ? numA - numB : numB - numA;
+      }
+
+      return sortDirection === 'asc'
+        ? valA.localeCompare(valB)
+        : valB.localeCompare(valA);
+    });
+
+    tbody.innerHTML = '';
+    rows.forEach((row) => tbody.appendChild(row));
+  });
+});
+
+// selecting rows
+document.querySelectorAll('tbody tr').forEach((tr) => {
+  tr.addEventListener('click', () => {
+    const trsAll = document.querySelectorAll('tbody tr');
+
+    trsAll.forEach((trNew) => trNew.classList.remove('active'));
+    tr.classList.add('active');
+  });
+});
+
+// adding form
+const table = document.querySelector('table');
+const form = document.createElement('form');
+
+form.classList.add('new-employee-form');
+
+table.after(form);
+
+function addFieldForm(fields) {
+  fields.forEach((field) => {
+    const labelField = document.createElement('label');
+
+    labelField.textContent = field.label + ': ';
+
+    const input = document.createElement('input');
+
+    input.name = field.name;
+    input.type = field.type;
+    input.dataset.qa = field.qa;
+
+    labelField.appendChild(input);
+    form.appendChild(labelField);
+  });
+}
+
+const fieldsOne = [
+  {
+    label: 'Name',
+    name: 'name',
+    type: 'text',
+    qa: 'name',
+  },
+  {
+    label: 'Position',
+    name: 'position',
+    type: 'text',
+    qa: 'position',
+  },
+];
+
+const fieldsTwo = [
+  {
+    label: 'Age',
+    name: 'age',
+    type: 'number',
+    qa: 'age',
+  },
+  {
+    label: 'Salary',
+    name: 'salary',
+    type: 'number',
+    qa: 'salary',
+  },
+];
+
+addFieldForm(fieldsOne);
+
+const label = document.createElement('label');
+const select = document.createElement('select');
+const options = [
+  'Tokyo',
+  'Singapore',
+  'London',
+  'New York',
+  'Edinburgh',
+  'San Francisco',
+];
+
+label.textContent = 'Office: ';
+select.name = 'office';
+select.dataset.qa = 'office';
+
+options.forEach((option) => {
+  const optionEl = document.createElement('option');
+
+  optionEl.textContent = option;
+  select.appendChild(optionEl);
+});
+label.appendChild(select);
+form.appendChild(label);
+
+addFieldForm(fieldsTwo);
+
+const button = document.createElement('button');
+
+button.textContent = 'Save to table';
+button.type = 'button';
+
+const notification = document.createElement('div');
+
+notification.classList.add('notification');
+notification.dataset.qa = 'notification';
+
+button.addEventListener('click', () => {
+  const inputs = form.querySelectorAll('input');
+  const selectButton = form.querySelector('select');
+
+  notification.classList.remove('error', 'success');
+
+  for (const input of inputs) {
+    if (input.value === '') {
+      notification.textContent = 'Заповніть всі поля!';
+      notification.classList.add('error');
+
+      return;
+    }
+
+    if (input.name === 'name' && input.value.length < 4) {
+      notification.textContent = 'У імені має бути мінімум 4 символа!';
+      notification.classList.add('error');
+
+      return;
+    }
+
+    if (input.name === 'age' && (input.value < 18 || input.value > 90)) {
+      notification.textContent = 'Вік може бути лише від 18 до 90!';
+      notification.classList.add('error');
+
+      return;
+    }
+  }
+
+  if (selectButton.value === '') {
+    notification.textContent = 'Виберіть офіс!';
+    notification.classList.add('error');
+
+    return;
+  }
+
+  const tr = document.createElement('tr');
+
+  inputs.forEach((input) => {
+    const td = document.createElement('td');
+
+    if (input.name === 'salary') {
+      const salaryNum = Number(input.value);
+
+      td.textContent = '$' + salaryNum.toLocaleString('en-US');
+    } else {
+      td.textContent = input.value;
+    }
+
+    tr.appendChild(td);
+  });
+
+  const tdSelect = document.createElement('td');
+
+  tdSelect.textContent = selectButton.value;
+  tr.insertBefore(tdSelect, tr.children[2]);
+
+  const tbody = document.querySelector('tbody');
+
+  tbody.appendChild(tr);
+
+  notification.textContent = 'Успішно додано нового працівника!';
+  notification.classList.add('success');
+
+  form.reset();
+});
+
+form.appendChild(button);
+form.after(notification);
+
+// additional
+const tdsNew = document.querySelectorAll('td');
+
+tdsNew.forEach((td) => {
+  td.addEventListener('dblclick', () => {
+    const initialValue = td.textContent;
+
+    if (td.querySelector('input')) {
+      return;
+    }
+
+    const input = document.createElement('input');
+
+    input.type = 'text';
+    input.classList.add('cell-input');
+    input.value = initialValue;
+
+    td.textContent = '';
+    td.appendChild(input);
+    input.focus();
+
+    input.addEventListener('blur', () => {
+      td.textContent = input.value || initialValue;
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        td.textContent = input.value || initialValue;
+      }
+    });
+  });
+});
