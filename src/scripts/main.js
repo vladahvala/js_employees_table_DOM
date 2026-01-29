@@ -3,6 +3,9 @@
 let lastColumnIndex = null;
 let sortDirection = 'asc';
 
+const main = document.querySelector('tbody');
+let activeInput = null;
+
 // table sorting
 document.querySelectorAll('thead tr th').forEach((th, index) => {
   th.addEventListener('click', () => {
@@ -38,13 +41,15 @@ document.querySelectorAll('thead tr th').forEach((th, index) => {
 });
 
 // selecting rows
-document.querySelectorAll('tbody tr').forEach((tr) => {
-  tr.addEventListener('click', () => {
-    const trsAll = document.querySelectorAll('tbody tr');
+main.addEventListener('click', (ev) => {
+  const tr = ev.target.closest('tr');
 
-    trsAll.forEach((trNew) => trNew.classList.remove('active'));
-    tr.classList.add('active');
-  });
+  if (!tr) {
+    return;
+  }
+
+  main.querySelectorAll('tr').forEach((r) => r.classList.remove('active'));
+  tr.classList.add('active');
 });
 
 // adding form
@@ -211,34 +216,50 @@ form.appendChild(button);
 form.after(notification);
 
 // additional
-const tdsNew = document.querySelectorAll('td');
 
-tdsNew.forEach((td) => {
-  td.addEventListener('dblclick', () => {
-    const initialValue = td.textContent;
+main.addEventListener('dblclick', (ev) => {
+  const td = ev.target.closest('td');
 
-    if (td.querySelector('input')) {
-      return;
+  if (!td) {
+    return;
+  }
+
+  if (activeInput) {
+    const parentTd = activeInput.parentElement;
+
+    parentTd.textContent =
+      activeInput.value || activeInput.dataset.initialValue;
+    activeInput = null;
+  }
+
+  if (td.querySelector('input')) {
+    return;
+  }
+
+  const initialValue = td.textContent;
+
+  const input = document.createElement('input');
+
+  input.type = 'text';
+  input.classList.add('cell-input');
+  input.value = initialValue;
+  input.dataset.initialValue = initialValue;
+
+  td.textContent = '';
+  td.appendChild(input);
+  input.focus();
+
+  activeInput = input;
+
+  input.addEventListener('blur', () => {
+    td.textContent = input.value || input.dataset.initialValue;
+    activeInput = null;
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      td.textContent = input.value || input.dataset.initialValue;
+      activeInput = null;
     }
-
-    const input = document.createElement('input');
-
-    input.type = 'text';
-    input.classList.add('cell-input');
-    input.value = initialValue;
-
-    td.textContent = '';
-    td.appendChild(input);
-    input.focus();
-
-    input.addEventListener('blur', () => {
-      td.textContent = input.value || initialValue;
-    });
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        td.textContent = input.value || initialValue;
-      }
-    });
   });
 });
