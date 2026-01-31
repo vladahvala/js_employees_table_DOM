@@ -183,24 +183,37 @@ button.addEventListener('click', () => {
 
   const tr = document.createElement('tr');
 
-  inputs.forEach((input) => {
-    const td = document.createElement('td');
+  const nameInput = form.querySelector('input[name="name"]');
+  const positionInput = form.querySelector('input[name="position"]');
+  const ageInput = form.querySelector('input[name="age"]');
+  const salaryInput = form.querySelector('input[name="salary"]');
 
-    if (input.name === 'salary') {
-      const salaryNum = Number(input.value);
+  // Name
+  let td = document.createElement('td');
 
-      td.textContent = '$' + salaryNum.toLocaleString('en-US');
-    } else {
-      td.textContent = input.value;
-    }
+  td.textContent = nameInput.value;
+  tr.appendChild(td);
 
-    tr.appendChild(td);
-  });
+  // Position
+  td = document.createElement('td');
+  td.textContent = positionInput.value;
+  tr.appendChild(td);
 
-  const tdSelect = document.createElement('td');
+  // Office
+  td = document.createElement('td');
+  td.textContent = selectButton.value;
+  tr.appendChild(td);
 
-  tdSelect.textContent = selectButton.value;
-  tr.insertBefore(tdSelect, tr.children[2]);
+  // Age
+  td = document.createElement('td');
+  td.textContent = ageInput.value;
+  tr.appendChild(td);
+
+  // Salary
+  td = document.createElement('td');
+
+  td.textContent = '$' + Number(salaryInput.value).toLocaleString('en-US');
+  tr.appendChild(td);
 
   const tbody = document.querySelector('tbody');
 
